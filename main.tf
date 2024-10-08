@@ -9,32 +9,13 @@ resource "aws_vpc" "myapp-vpc" {
   }
 }
 
-resource "aws_subnet" "myapp-subnet-1" {
+module "myapp-subnet" {
+  source = "./modules/subnet"
+  subnet_cidr_block = var.subnet_cidr_block
+  avail_zone = var.avail_zone
+  env_prefix = var.env_prefix
   vpc_id = aws_vpc.myapp-vpc.id
-  cidr_block = var.subnet_cidr_block 
-  availability_zone = var.avail_zone
-  tags = {
-    Name: "${var.env_prefix}-subnet-1"
-  }
-}
-
-resource "aws_internet_gateway" "myapp-igw" {
-  vpc_id = aws_vpc.myapp-vpc.id
-  tags = {
-    Name: "${var.env_prefix}-igw"
-  }
-}
-
-resource "aws_default_route_table" "main-rtb" {
   default_route_table_id = aws_vpc.myapp-vpc.default_route_table_id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.myapp-igw.id
-  }
-  tags = {
-    Name: "${var.env_prefix}-main-rtb"
-  }
 }
 
 resource "aws_default_security_group" "default-sg" {
@@ -94,7 +75,7 @@ resource "aws_instance" "myapp-server" {
   instance_type = var.instance_type
 
   # Specify non-default options
-  subnet_id = aws_subnet.myapp-subnet-1.id
+  subnet_id = module.myapp-subnet.subnet.id
   vpc_security_group_ids = [aws_default_security_group.default-sg.id]
   availability_zone = var.avail_zone
 
