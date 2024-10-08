@@ -7,6 +7,7 @@ variable subnet_cidr_block {}
 variable avail_zone {}
 variable env_prefix {}
 variable my_ip {}
+variable instance_type {}
 
 resource "aws_vpc" "myapp-vpc" {
   cidr_block = var.vpc_cidr_block
@@ -98,4 +99,30 @@ resource "aws_default_security_group" "default-sg" {
     Name: "${var.env_prefix}-default-sg"
     # Name: "${var.env_prefix}-sg" # sg tag for created sg
   }  
+}
+
+data "aws_ami" "latest-amazon-linux-image" {
+  most_recent = true
+  owners = ["amazon"]
+  filter {
+    name = "name"
+    values = ["amzn2-ami-kernel-*-x86_64-gp2"]
+  }
+  filter {
+    name = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
+# Output AMI ID
+output "aws_ami_id" {
+  value = data.aws_ami.latest-amazon-linux-image.id
+}
+
+resource "aws_instance" "myapp-server" {
+  # Example set AMI dynamically
+  # ami = "ami-0fff1b9a61dec8a5f"
+  ami = data.aws_ami.latest-amazon-linux-image.id
+  instance_type = var.instance_type
+  
 }
