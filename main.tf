@@ -161,7 +161,7 @@ resource "aws_instance" "myapp-server" {
   # Input path for user data
   user_data = file("entry-script.sh")
               
-  user_data_replace_on_change = false
+  user_data_replace_on_change = true
 
   tags = {
     Name: "${var.env_prefix}-server"
