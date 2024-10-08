@@ -2,16 +2,6 @@ provider "aws" {
   region = "us-east-1"
 }
 
-variable vpc_cidr_block {}
-variable subnet_cidr_block {}
-variable avail_zone {}
-variable env_prefix {}
-variable my_ip {}
-variable instance_type {}
-variable public_key_location {}
-variable private_key_location {}
-# variable my_pub_key {}
-
 resource "aws_vpc" "myapp-vpc" {
   cidr_block = var.vpc_cidr_block
   tags = {
@@ -28,33 +18,12 @@ resource "aws_subnet" "myapp-subnet-1" {
   }
 }
 
-# Creates a route table (non-default) with igw
-
-# resource "aws_route_table" "myapp-route_table" {
-#   vpc_id = aws_vpc.myapp-vpc.id
-
-#   route {
-#     cidr_block = "0.0.0.0/0"
-#     gateway_id = aws_internet_gateway.myapp-igw.id
-#   }
-#   tags = {
-#     Name: "${var.env_prefix}-rtb"
-#   }
-# }
-
 resource "aws_internet_gateway" "myapp-igw" {
   vpc_id = aws_vpc.myapp-vpc.id
   tags = {
     Name: "${var.env_prefix}-igw"
   }
 }
-
-# Associates a route table (non-default) to a subnet
-
-# resource "aws_route_table_association" "a-rtb-subnet" {
-#   subnet_id = aws_subnet.myapp-subnet-1.id
-#   route_table_id = aws_route_table.myapp-route_table.id
-# }
 
 resource "aws_default_route_table" "main-rtb" {
   default_route_table_id = aws_vpc.myapp-vpc.default_route_table_id
@@ -69,10 +38,6 @@ resource "aws_default_route_table" "main-rtb" {
 }
 
 resource "aws_default_security_group" "default-sg" {
-
-# # create a security group
-# resource "aws_security_group" "myapp-sg" {
-#   name = "myapp-sg"
 
   vpc_id = aws_vpc.myapp-vpc.id
 
@@ -99,8 +64,7 @@ resource "aws_default_security_group" "default-sg" {
   }
 
   tags = {
-    Name: "${var.env_prefix}-default-sg"
-    # Name: "${var.env_prefix}-sg" # sg tag for created sg
+    Name: "${var.env_prefix}-default-sg"    
   }  
 }
 
@@ -117,27 +81,15 @@ data "aws_ami" "latest-amazon-linux-image" {
   }
 }
 
-# Output AMI ID
-output "aws_ami_id" {
-  value = data.aws_ami.latest-amazon-linux-image.id
-}
-
-# Output ec2 Public IP
-output "ec2_public_ip" {
-  value = aws_instance.myapp-server.public_ip
-}
-
 # Automate Key-Pair Generation
 
 resource "aws_key_pair" "ssh-key" {
-  key_name = "server-keyPair"
-  # public_key =  var.my_pub_key # Using variable string value
+  key_name = "server-keyPair"  
   public_key = file(var.public_key_location)
 }
 
 resource "aws_instance" "myapp-server" {
-  # Example set AMI dynamically
-  # ami = "ami-0fff1b9a61dec8a5f"
+  
   ami = data.aws_ami.latest-amazon-linux-image.id
   instance_type = var.instance_type
 
@@ -148,16 +100,6 @@ resource "aws_instance" "myapp-server" {
 
   associate_public_ip_address = true
   key_name = aws_key_pair.ssh-key.key_name
-
-  /* # Manually pass user data
-  user_data = <<EOF 
-                #!/bin/bash
-                sudo yum update -y && sudo yum install docker -y
-                sudo systemctl start docker
-                sudo usermod -aG docker ec2-user
-                docker run -p 8080:80 nginx
-              EOF
-  */
 
   # Input path for user data
   # user_data = file("entry-script.sh")
@@ -176,14 +118,7 @@ resource "aws_instance" "myapp-server" {
     destination = "/home/ec2-user/entry-script-ec2-run.sh"
   }
 
-  provisioner "remote-exec" {
-    # inline = [
-    #   # "export ENV=dev",
-    #   # "mkdir newdir"
-    #   "/home/ec2-user/entry-script-ec2-run.sh"
-    # ]
-    script = "entry-script.sh"
-  }
+  provisioner "remote-exec" {script = "entry-script.sh"}
 
   provisioner "local-exec" {
     command = "echo ${self.public_ip} > output_pub_ip.txt"
