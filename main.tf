@@ -8,6 +8,8 @@ variable avail_zone {}
 variable env_prefix {}
 variable my_ip {}
 variable instance_type {}
+variable public_key_location {}
+# variable my_pub_key {}
 
 resource "aws_vpc" "myapp-vpc" {
   cidr_block = var.vpc_cidr_block
@@ -119,6 +121,19 @@ output "aws_ami_id" {
   value = data.aws_ami.latest-amazon-linux-image.id
 }
 
+# Output ec2 Public IP
+output "ec2_public_ip" {
+  value = aws_instance.myapp-server.public_ip
+}
+
+# Automate Key-Pair Generation
+
+resource "aws_key_pair" "ssh-key" {
+  key_name = "server-keyPair"
+  # public_key =  var.my_pub_key # Using variable string value
+  public_key = file(var.public_key_location)
+}
+
 resource "aws_instance" "myapp-server" {
   # Example set AMI dynamically
   # ami = "ami-0fff1b9a61dec8a5f"
@@ -131,7 +146,7 @@ resource "aws_instance" "myapp-server" {
   availability_zone = var.avail_zone
 
   associate_public_ip_address = true
-  key_name = "server-key-pair"
+  key_name = aws_key_pair.ssh-key.key_name
 
   tags = {
     Name: "${var.env_prefix}-server"
