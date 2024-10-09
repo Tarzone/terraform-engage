@@ -89,3 +89,8 @@ resource "aws_instance" "myapp-server" {
     Name: "${var.env_prefix}-server"
   } 
 }
+
+resource "aws_eip" "myapp-server-eip" {
+  instance = aws_instance.myapp-server.id
+  domain   = "vpc"
+}
