@@ -28,4 +28,5 @@ module "myapp-server" {
   instance_type = var.instance_type
   subnet_id = module.myapp-subnet.subnet.id
   avail_zone = var.avail_zone
+  allocation_id = var.allocation_id
 }

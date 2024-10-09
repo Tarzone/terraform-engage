@@ -1,8 +1,9 @@
-# Output ec2 Public IP
+# Output Initial ec2 Public IP
 output "ec2_public_ip" {
   value = module.myapp-server.instance.public_ip
 }
-
+# Output New EIP
+/*
 output "eip_allocation_id" {
   value = module.myapp-server.eip.allocation_id
 }
@@ -17,4 +18,10 @@ output "eip_vpc" {
 
 output "eip_public_ip" {
   value = module.myapp-server.eip.public_ip
+}
+*/
+
+# Output Existing eIP
+output "eip_public_ip" {
+  value = module.myapp-server.eip_alloc.public_ip
 }

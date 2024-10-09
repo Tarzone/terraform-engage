@@ -90,7 +90,12 @@ resource "aws_instance" "myapp-server" {
   } 
 }
 
-resource "aws_eip" "myapp-server-eip" {
-  instance = aws_instance.myapp-server.id
-  domain   = "vpc"
+# resource "aws_eip" "myapp-server-eip" {
+#   instance = aws_instance.myapp-server.id
+#   domain   = "vpc"
+# }
+
+resource "aws_eip_association" "eip_assoc" {
+  instance_id   = aws_instance.myapp-server.id
+  allocation_id = var.allocation_id
 }
