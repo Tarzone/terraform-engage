@@ -97,5 +97,6 @@ resource "aws_instance" "myapp-server" {
 
 resource "aws_eip_association" "eip_assoc" {
   instance_id   = aws_instance.myapp-server.id
-  allocation_id = var.allocation_id
+  allocation_id = var.allocation_id[0]
+  allow_reassociation = var.allow_reassociation[0]
 }
